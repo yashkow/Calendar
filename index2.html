@@ -42,16 +42,17 @@
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById("date").textContent = now.toLocaleDateString('ru-RU', options);
 
-    // Загружаем цитату с ZenQuotes API
-    fetch("https://zenquotes.io/api/today")
-      .then(res => res.json())
-      .then(data => {
-        const quote = `${data[0].q} — ${data[0].a}`;
-        document.getElementById("quote").textContent = quote;
-      })
-      .catch(() => {
-        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
-      });
+    // Загружаем цитату с 
+fetch("https://type.fit/api/quotes")
+  .then(res => res.json())
+  .then(data => {
+    const random = data[Math.floor(Math.random() * data.length)];
+    const quote = `${random.text} — ${random.author || "Неизвестный автор"}`;
+    document.getElementById("quote").textContent = quote;
+  })
+  .catch(() => {
+    document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
+  });
 
     // Получаем событие из Wikipedia API
     const month = now.getMonth() + 1;
