@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь идей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            padding: 50px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .date {
+            font-size: 24px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .quote {
+            font-size: 20px;
+            font-style: italic;
+            color: #2c3e50;
+            margin-top: 30px;
+            padding: 15px;
+            background: #eaf7fd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Календарь идей</h1>
+        <div class="date" id="currentDate"></div>
+        <div class="quote" id="dailyQuote"></div>
+    </div>
+
+    <script>
+        // Функция для форматирования даты
+        function getCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return now.toLocaleDateString('ru-RU', options);
+        }
+
+        // Массив с фразами (можно расширить)
+        const quotes = [
+            "День, когда сбываются все мечты!",
+            "Сегодня — идеальный день для новых начинаний!",
+            "Верьте в себя, и всё получится!",
+            "Каждый день — новый шанс изменить жизнь!",
+            "Мечты становятся реальностью, если действовать!",
+            "Счастье там, где его ждут!",
+            "Сделайте сегодня что-то необычное!"
+        ];
+
+        // Получаем случайную фразу (можно привязать к дате)
+        function getDailyQuote() {
+            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+            return quotes[dayOfYear % quotes.length];
+        }
+
+        // Обновляем данные на странице
+        document.getElementById('currentDate').textContent = getCurrentDate();
+        document.getElementById('dailyQuote').textContent = getDailyQuote();
+    </script>
+</body>
+</html>
