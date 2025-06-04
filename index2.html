@@ -8,7 +8,7 @@
     body {
       font-family: sans-serif;
       padding: 2em;
-      background: #f0f0f0;
+      background: #f7f7f7;
       color: #222;
     }
     .card {
@@ -16,20 +16,23 @@
       border-radius: 16px;
       padding: 2em;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
     }
-    h1 {
-      font-size: 1.8em;
-      margin-bottom: 0.5em;
+    h1, h2 {
+      font-size: 1.6em;
+      margin-top: 1em;
     }
     .quote {
       font-style: italic;
       margin: 1em 0;
       color: #555;
     }
-    .event {
-      margin: 0.5em 0;
+    .section {
+      margin-top: 1em;
+    }
+    .item {
+      margin-bottom: 0.5em;
     }
   </style>
 </head>
@@ -37,8 +40,21 @@
   <div class="card">
     <h1 id="date">Сегодня</h1>
     <div class="quote" id="quote">Загружаем цитату...</div>
-    <h2>Исторические события:</h2>
-    <div id="events">Загрузка...</div>
+
+    <div class="section">
+      <h2>Исторические события</h2>
+      <div id="events">Загрузка...</div>
+    </div>
+
+    <div class="section">
+      <h2>Родились в этот день</h2>
+      <div id="births">Загрузка...</div>
+    </div>
+
+    <div class="section">
+      <h2>Праздники</h2>
+      <div id="holidays">Загрузка...</div>
+    </div>
   </div>
 
   <script>
@@ -46,39 +62,82 @@
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById("date").textContent = now.toLocaleDateString('ru-RU', options);
 
-    // Цитата с type.fit (рабочий API)
- fetch("https://api.allorigins.win/get?url=https://type.fit/api/quotes")
-  .then(res => res.json())
-  .then(data => {
-    const quotes = JSON.parse(data.contents);
-    const random = quotes[Math.floor(Math.random() * quotes.length)];
-    document.getElementById("quote").textContent = `${random.text} — ${random.author || "Неизвестный"}`;
-  });
+    // Локальный список цитат
+    const quotes = [
+      "Счастье не в том, чтобы иметь всё, а в том, чтобы ценить всё.",
+      "Каждый день — новый шанс начать сначала.",
+      "Смелость — это первый шаг к мечте.",
+      "Ты сильнее, чем думаешь.",
+      "Трудности делают нас мудрее.",
+      "Улыбнись — и мир улыбнётся тебе.",
+      "Делай шаг, даже если боишься.",
+      "Будущее начинается сегодня.",
+      "Живи просто. Люби щедро. Прощай легко.",
+      "Один шаг в день — и ты уже не стоишь на месте."
+      // Добавь ещё при необходимости
+    ];
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    document.getElementById("quote").textContent = quotes[(dayOfYear - 1) % quotes.length];
 
-    // Исторические события (7 штук) с Wikipedia
+    // Дата для запросов
     const month = now.getMonth() + 1;
     const day = now.getDate();
 
-    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`)
+    // Загружаем события, рождения и праздники
+    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/all/${month}/${day}`)
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById("events");
-        container.innerHTML = "";
-        const events = data.events.slice(0, 15); // первые 7
+        // События
+        const events = data.events.slice(0, 7);
+        const eventsContainer = document.getElementById("events");
+        eventsContainer.innerHTML = "";
         if (events.length === 0) {
-          container.textContent = "Исторические события не найдены.";
+          eventsContainer.textContent = "Нет событий.";
         } else {
           events.forEach(e => {
             const div = document.createElement("div");
-            div.className = "event";
+            div.className = "item";
             div.textContent = `${e.year}: ${e.text}`;
-            container.appendChild(div);
+            eventsContainer.appendChild(div);
+          });
+        }
+
+        // Рождения
+        const births = data.births.slice(0, 7);
+        const birthsContainer = document.getElementById("births");
+        birthsContainer.innerHTML = "";
+        if (births.length === 0) {
+          birthsContainer.textContent = "Нет информации.";
+        } else {
+          births.forEach(b => {
+            const div = document.createElement("div");
+            div.className = "item";
+            div.textContent = `${b.year}: ${b.text}`;
+            birthsContainer.appendChild(div);
+          });
+        }
+
+        // Праздники
+        const holidays = data.holidays || [];
+        const holidaysContainer = document.getElementById("holidays");
+        holidaysContainer.innerHTML = "";
+        if (holidays.length === 0) {
+          holidaysContainer.textContent = "Нет праздников.";
+        } else {
+          holidays.forEach(h => {
+            const div = document.createElement("div");
+            div.className = "item";
+            div.textContent = h.text;
+            holidaysContainer.appendChild(div);
           });
         }
       })
       .catch(() => {
-        document.getElementById("events").textContent = "Не удалось загрузить события.";
+        document.getElementById("events").textContent = "Ошибка при загрузке событий.";
+        document.getElementById("births").textContent = "Ошибка при загрузке рождений.";
+        document.getElementById("holidays").textContent = "Ошибка при загрузке праздников.";
       });
   </script>
 </body>
 </html>
+
