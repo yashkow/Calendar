@@ -47,16 +47,13 @@
     document.getElementById("date").textContent = now.toLocaleDateString('ru-RU', options);
 
     // Цитата с type.fit (рабочий API)
-    fetch("https://type.fit/api/quotes")
-      .then(res => res.json())
-      .then(data => {
-        const random = data[Math.floor(Math.random() * data.length)];
-        const quote = `${random.text} — ${random.author || "Неизвестный автор"}`;
-        document.getElementById("quote").textContent = quote;
-      })
-      .catch(() => {
-        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
-      });
+ fetch("https://api.allorigins.win/get?url=https://type.fit/api/quotes")
+  .then(res => res.json())
+  .then(data => {
+    const quotes = JSON.parse(data.contents);
+    const random = quotes[Math.floor(Math.random() * quotes.length)];
+    document.getElementById("quote").textContent = `${random.text} — ${random.author || "Неизвестный"}`;
+  });
 
     // Исторические события (7 штук) с Wikipedia
     const month = now.getMonth() + 1;
