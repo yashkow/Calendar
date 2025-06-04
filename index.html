@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Календарь идей</title>
+    <title>Мой календарь</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f0f8ff;
-            padding: 50px;
+            padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -27,35 +27,83 @@
             color: #555;
             margin-bottom: 20px;
         }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .section-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
         .quote {
             font-size: 20px;
             font-style: italic;
             color: #2c3e50;
-            margin-top: 30px;
-            padding: 15px;
-            background: #eaf7fd;
-            border-radius: 8px;
+        }
+        .history-event {
+            margin: 15px 0;
+            padding-left: 15px;
+            border-left: 3px solid #3498db;
+        }
+        .history-year {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Календарь идей</h1>
+        <h1>Мой ежедневный календарь</h1>
         <div class="date" id="currentDate"></div>
-        <div class="quote" id="dailyQuote"></div>
+        
+        <div class="section">
+            <h2 class="section-title">Цитата дня</h2>
+            <div class="quote" id="dailyQuote"></div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">Этот день в истории</h2>
+            <div id="historyLoader" class="loader" style="display: none;"></div>
+            <div id="dailyHistory"></div>
+        </div>
     </div>
 
     <script>
         // Функция для форматирования даты
         function getCurrentDate() {
             const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
             return now.toLocaleDateString('ru-RU', options);
         }
 
-        // Массив с фразами (можно расширить)
+        // Массив с цитатами
         const quotes = [
-           "Сегодня начни с улыбки — твори с любовью.",
+            "День, когда сбываются все мечты!",
+            "Сегодня — идеальный день для новых начинаний!",
+                      "Сегодня начни с улыбки — твори с любовью.",
 "Ты больше, чем ты думаешь — действуй уверенно.",
 "Мир создаёт возможности — вдохновляй собой.",
 "Каждое утро наполнен светом — не бойся сиять.",
@@ -159,15 +207,73 @@
 "Сегодня твой день — живи его ярко."
         ];
 
-        // Получаем случайную фразу (можно привязать к дате)
+        // Получаем цитату дня
         function getDailyQuote() {
             const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
             return quotes[dayOfYear % quotes.length];
         }
 
-        // Обновляем данные на странице
-        document.getElementById('currentDate').textContent = getCurrentDate();
-        document.getElementById('dailyQuote').textContent = getDailyQuote();
+        // Получаем исторические события с Wikipedia API
+        async function getHistoricalEvents() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            
+            try {
+                const response = await fetch(
+                    `https://ru.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`
+                );
+                
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                
+                const data = await response.json();
+                return data.events || [];
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return [];
+            }
+        }
+
+        // Форматируем исторические события
+        function formatEvents(events) {
+            if (events.length === 0) {
+                return '<p>Не удалось загрузить события этого дня</p>';
+            }
+            
+            // Выбираем 3 самых интересных события
+            const selectedEvents = events
+                .filter(event => event.text && event.year)
+                .slice(0, 3);
+            
+            return selectedEvents.map(event => `
+                <div class="history-event">
+                    <span class="history-year">${event.year}:</span> 
+                    ${event.text.replace(/<[^>]+>/g, '')}
+                </div>
+            `).join('');
+        }
+
+        // Обновляем интерфейс
+        async function updateUI() {
+            document.getElementById('currentDate').textContent = getCurrentDate();
+            document.getElementById('dailyQuote').textContent = getDailyQuote();
+            
+            // Загружаем исторические события
+            const loader = document.getElementById('historyLoader');
+            const historyContainer = document.getElementById('dailyHistory');
+            
+            loader.style.display = 'block';
+            historyContainer.innerHTML = '';
+            
+            const events = await getHistoricalEvents();
+            historyContainer.innerHTML = formatEvents(events);
+            
+            loader.style.display = 'none';
+        }
+
+        // Запускаем при загрузке страницы
+        document.addEventListener('DOMContentLoaded', updateUI);
     </script>
 </body>
 </html>
