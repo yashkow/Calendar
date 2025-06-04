@@ -244,7 +244,7 @@
             // Выбираем 3 самых интересных события
             const selectedEvents = events
                 .filter(event => event.text && event.year)
-                .slice(0, 3);
+                .slice(0, 5);
             
             return selectedEvents.map(event => `
                 <div class="history-event">
