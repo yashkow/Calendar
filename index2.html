@@ -82,7 +82,7 @@
     const month = now.getMonth() + 1;
     const day = now.getDate();
 
-    function showItems(id, items, count = 7) {
+    function showItems(id, items, count = 15) {
       const container = document.getElementById(id);
       container.innerHTML = "";
       if (!items || items.length === 0) {
