@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Календарь идей</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      background: #f2f2f2;
+      color: #333;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 2em;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+    }
+    .quote, .event {
+      margin-top: 1em;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="date">Сегодня</h1>
+    <div class="quote" id="quote">Загружаем цитату...</div>
+    <div class="event" id="event">Загружаем историческое событие...</div>
+  </div>
+
+  <script>
+    // Устанавливаем дату
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById("date").textContent = now.toLocaleDateString('ru-RU', options);
+
+    // Загружаем цитату с ZenQuotes API
+    fetch("https://zenquotes.io/api/today")
+      .then(res => res.json())
+      .then(data => {
+        const quote = `${data[0].q} — ${data[0].a}`;
+        document.getElementById("quote").textContent = quote;
+      })
+      .catch(() => {
+        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
+      });
+
+    // Получаем событие из Wikipedia API
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.events.length > 0) {
+          const randomEvent = data.events[Math.floor(Math.random() * data.events.length)];
+          const eventText = `${randomEvent.year}: ${randomEvent.text}`;
+          document.getElementById("event").textContent = eventText;
+        } else {
+          document.getElementById("event").textContent = "Нет данных о событии на сегодня.";
+        }
+      })
+      .catch(() => {
+        document.getElementById("event").textContent = "Не удалось загрузить историческое событие.";
+      });
+  </script>
+</body>
+</html>
