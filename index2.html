@@ -8,24 +8,28 @@
     body {
       font-family: sans-serif;
       padding: 2em;
-      background: #f2f2f2;
-      color: #333;
+      background: #f0f0f0;
+      color: #222;
     }
     .card {
       background: white;
       border-radius: 16px;
       padding: 2em;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
     }
     h1 {
-      font-size: 2em;
+      font-size: 1.8em;
       margin-bottom: 0.5em;
     }
-    .quote, .event {
-      margin-top: 1em;
+    .quote {
       font-style: italic;
+      margin: 1em 0;
+      color: #555;
+    }
+    .event {
+      margin: 0.5em 0;
     }
   </style>
 </head>
@@ -33,43 +37,50 @@
   <div class="card">
     <h1 id="date">Сегодня</h1>
     <div class="quote" id="quote">Загружаем цитату...</div>
-    <div class="event" id="event">Загружаем историческое событие...</div>
+    <h2>Исторические события:</h2>
+    <div id="events">Загрузка...</div>
   </div>
 
   <script>
-    // Устанавливаем дату
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById("date").textContent = now.toLocaleDateString('ru-RU', options);
 
-    // Загружаем цитату с 
-fetch("https://type.fit/api/quotes")
-  .then(res => res.json())
-  .then(data => {
-    const random = data[Math.floor(Math.random() * data.length)];
-    const quote = `${random.text} — ${random.author || "Неизвестный автор"}`;
-    document.getElementById("quote").textContent = quote;
-  })
-  .catch(() => {
-    document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
-  });
+    // Цитата с type.fit (рабочий API)
+    fetch("https://type.fit/api/quotes")
+      .then(res => res.json())
+      .then(data => {
+        const random = data[Math.floor(Math.random() * data.length)];
+        const quote = `${random.text} — ${random.author || "Неизвестный автор"}`;
+        document.getElementById("quote").textContent = quote;
+      })
+      .catch(() => {
+        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
+      });
 
-    // Получаем событие из Wikipedia API
+    // Исторические события (7 штук) с Wikipedia
     const month = now.getMonth() + 1;
     const day = now.getDate();
+
     fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`)
       .then(res => res.json())
       .then(data => {
-        if (data.events.length > 0) {
-          const randomEvent = data.events[Math.floor(Math.random() * data.events.length)];
-          const eventText = `${randomEvent.year}: ${randomEvent.text}`;
-          document.getElementById("event").textContent = eventText;
+        const container = document.getElementById("events");
+        container.innerHTML = "";
+        const events = data.events.slice(0, 7); // первые 7
+        if (events.length === 0) {
+          container.textContent = "Исторические события не найдены.";
         } else {
-          document.getElementById("event").textContent = "Нет данных о событии на сегодня.";
+          events.forEach(e => {
+            const div = document.createElement("div");
+            div.className = "event";
+            div.textContent = `${e.year}: ${e.text}`;
+            container.appendChild(div);
+          });
         }
       })
       .catch(() => {
-        document.getElementById("event").textContent = "Не удалось загрузить историческое событие.";
+        document.getElementById("events").textContent = "Не удалось загрузить события.";
       });
   </script>
 </body>
