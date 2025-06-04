@@ -67,7 +67,7 @@
       .then(data => {
         const container = document.getElementById("events");
         container.innerHTML = "";
-        const events = data.events.slice(0, 7); // первые 7
+        const events = data.events.slice(0, 15); // первые 7
         if (events.length === 0) {
           container.textContent = "Исторические события не найдены.";
         } else {
