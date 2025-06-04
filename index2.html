@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Календарь идей</title>
   <style>
     body {
@@ -74,69 +74,47 @@
       "Будущее начинается сегодня.",
       "Живи просто. Люби щедро. Прощай легко.",
       "Один шаг в день — и ты уже не стоишь на месте."
-      // Добавь ещё при необходимости
+      // Добавь больше цитат при необходимости
     ];
     const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
     document.getElementById("quote").textContent = quotes[(dayOfYear - 1) % quotes.length];
 
-    // Дата для запросов
     const month = now.getMonth() + 1;
     const day = now.getDate();
 
-    // Загружаем события, рождения и праздники
-    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/all/${month}/${day}`)
-      .then(res => res.json())
-      .then(data => {
-        // События
-        const events = data.events.slice(0, 7);
-        const eventsContainer = document.getElementById("events");
-        eventsContainer.innerHTML = "";
-        if (events.length === 0) {
-          eventsContainer.textContent = "Нет событий.";
+    function showItems(id, items, count = 7) {
+      const container = document.getElementById(id);
+      container.innerHTML = "";
+      if (!items || items.length === 0) {
+        container.textContent = "Информация отсутствует.";
+        return;
+      }
+      items.slice(0, count).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+        if (item.year) {
+          div.textContent = `${item.year}: ${item.text}`;
         } else {
-          events.forEach(e => {
-            const div = document.createElement("div");
-            div.className = "item";
-            div.textContent = `${e.year}: ${e.text}`;
-            eventsContainer.appendChild(div);
-          });
+          div.textContent = item.text;
         }
-
-        // Рождения
-        const births = data.births.slice(0, 7);
-        const birthsContainer = document.getElementById("births");
-        birthsContainer.innerHTML = "";
-        if (births.length === 0) {
-          birthsContainer.textContent = "Нет информации.";
-        } else {
-          births.forEach(b => {
-            const div = document.createElement("div");
-            div.className = "item";
-            div.textContent = `${b.year}: ${b.text}`;
-            birthsContainer.appendChild(div);
-          });
-        }
-
-        // Праздники
-        const holidays = data.holidays || [];
-        const holidaysContainer = document.getElementById("holidays");
-        holidaysContainer.innerHTML = "";
-        if (holidays.length === 0) {
-          holidaysContainer.textContent = "Нет праздников.";
-        } else {
-          holidays.forEach(h => {
-            const div = document.createElement("div");
-            div.className = "item";
-            div.textContent = h.text;
-            holidaysContainer.appendChild(div);
-          });
-        }
-      })
-      .catch(() => {
-        document.getElementById("events").textContent = "Ошибка при загрузке событий.";
-        document.getElementById("births").textContent = "Ошибка при загрузке рождений.";
-        document.getElementById("holidays").textContent = "Ошибка при загрузке праздников.";
+        container.appendChild(div);
       });
+    }
+
+    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`)
+      .then(res => res.json())
+      .then(data => showItems("events", data.events))
+      .catch(() => document.getElementById("events").textContent = "Не удалось загрузить события.");
+
+    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/births/${month}/${day}`)
+      .then(res => res.json())
+      .then(data => showItems("births", data.births))
+      .catch(() => document.getElementById("births").textContent = "Не удалось загрузить рождения.");
+
+    fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/holidays/${month}/${day}`)
+      .then(res => res.json())
+      .then(data => showItems("holidays", data.holidays))
+      .catch(() => document.getElementById("holidays").textContent = "Не удалось загрузить праздники.");
   </script>
 </body>
 </html>
