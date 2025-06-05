@@ -96,19 +96,29 @@
 
     // Курс валют — используем exchangerate-api.com бесплатный endpoint (CORS разрешён)
     // Пример URL: https://open.er-api.com/v6/latest/USD
-    fetch("https://open.er-api.com/v6/latest/USD")
-      .then(res => res.json())
-      .then(data => {
-        if(data && data.rates && data.rates.MDL) {
-          const rate = data.rates.MDL.toFixed(2);
-          document.getElementById("rate").textContent = `1 доллар США = ${rate} молдавских леев`;
-        } else {
-          document.getElementById("rate").textContent = "Курс недоступен.";
-        }
-      })
-      .catch(() => {
-        document.getElementById("rate").textContent = "Не удалось загрузить курс.";
-      });
+fetch("https://open.er-api.com/v6/latest/USD")
+  .then(res => res.json())
+  .then(data => {
+    if(data && data.rates) {
+      const rates = data.rates;
+      const mdl = rates.MDL ? rates.MDL.toFixed(2) : 'N/A';
+      const uah = rates.UAH ? rates.UAH.toFixed(2) : 'N/A';
+      const eur = rates.EUR ? rates.EUR.toFixed(2) : 'N/A';
+      const rub = rates.RUB ? rates.RUB.toFixed(2) : 'N/A';
+
+      document.getElementById("rate").innerHTML = `
+        1 доллар США = ${mdl} молдавских леев<br />
+        1 доллар США = ${uah} украинских гривен<br />
+        1 доллар США = ${eur} евро<br />
+        1 доллар США = ${rub} российских рублей
+      `;
+    } else {
+      document.getElementById("rate").textContent = "Курс недоступен.";
+    }
+  })
+  .catch(() => {
+    document.getElementById("rate").textContent = "Не удалось загрузить курс.";
+  });
   </script>
 </body>
 </html>
