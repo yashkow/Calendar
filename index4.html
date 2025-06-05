@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Мотивация и курсы валют</title>
   <style>
     body {
@@ -67,6 +67,9 @@
       color: #666;
       font-style: italic;
     }
+    .error {
+      color: #d32f2f;
+    }
   </style>
 </head>
 <body>
@@ -83,12 +86,13 @@
     <div class="section">
       <h2>Праздники сегодня</h2>
       <div id="holidays" class="loading">Загрузка праздников...</div>
+      <button class="refresh-btn" onclick="loadHolidays()">Обновить праздники</button>
     </div>
   </div>
   <div class="right">
     <div class="section">
       <h2>Случайное изображение (Picsum)</h2>
-      <img src="https://picsum.photos/600/400?random=1" alt="Случайное изображение" id="randomImage" />
+      <img src="https://picsum.photos/600/400?random=1" alt="Случайное изображение" id="randomImage">
       <button class="refresh-btn" onclick="refreshImage()">Новое изображение</button>
     </div>
     <div class="section">
@@ -104,10 +108,11 @@
       const today = new Date();
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       document.getElementById("date").textContent = today.toLocaleDateString('ru-RU', options);
+      return today;
     }
     updateDate();
 
-    // Мотивационная цитата (новый API)
+    // Мотивационная цитата
     function loadQuote() {
       document.getElementById("quote").textContent = "Загрузка...";
       fetch("https://api.quotable.io/random?maxLength=120")
@@ -124,36 +129,80 @@
     }
     loadQuote();
 
-    // Праздники (используем API Calendarific)
+    // Праздники через Wikipedia API
     function loadHolidays() {
-      const today = new Date();
-      const year = today.getFullYear();
+      const today = updateDate();
       const month = today.getMonth() + 1;
       const day = today.getDate();
       
-      // Внимание: Для реального использования нужно получить API ключ на calendarific.com
-      // Это демо-версия с ограниченными данными
-      const demoHolidays = [
-        { name: "Международный день программиста", country: "Россия" },
-        { name: "День знаний", country: "Россия" },
-        { name: "День работников нефтяной и газовой промышленности", country: "Россия" }
+      document.getElementById("holidays").className = "loading";
+      document.getElementById("holidays").textContent = "Загрузка праздников...";
+      
+      // Формируем дату в формате "день_месяца" (например, "1_января")
+      const monthNames = [
+        "января", "февраля", "марта", "апреля", "мая", "июня",
+        "июля", "августа", "сентября", "октября", "ноября", "декабря"
       ];
+      const dateStr = `${day}_${monthNames[month-1]}`;
       
-      // В реальном приложении нужно сделать запрос к API:
-      // fetch(`https://calendarific.com/api/v2/holidays?api_key=ВАШ_КЛЮЧ&country=RU&year=${year}&month=${month}&day=${day}`)
-      
-      const holidaysContainer = document.getElementById("holidays");
-      if (demoHolidays.length > 0) {
-        holidaysContainer.innerHTML = '';
-        demoHolidays.forEach(holiday => {
-          const holidayElement = document.createElement('div');
-          holidayElement.className = 'holiday';
-          holidayElement.innerHTML = `<strong>${holiday.name}</strong><br>${holiday.country}`;
-          holidaysContainer.appendChild(holidayElement);
+      // Запрос к Wikipedia API
+      fetch(`https://ru.wikipedia.org/api/rest_v1/page/html/${dateStr}`)
+        .then(response => {
+          if (!response.ok) throw new Error("Ошибка загрузки");
+          return response.text();
+        })
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          
+          // Ищем раздел с праздниками
+          const holidaysSection = Array.from(doc.querySelectorAll("h2")).find(h2 => 
+            h2.textContent.includes("Праздники") || h2.textContent.includes("Международные праздники")
+          );
+          
+          if (!holidaysSection) {
+            throw new Error("Раздел с праздниками не найден");
+          }
+          
+          // Получаем список праздников
+          let nextElement = holidaysSection.nextElementSibling;
+          const holidays = [];
+          
+          while (nextElement && !nextElement.matches("h2")) {
+            if (nextElement.matches("ul")) {
+              const items = nextElement.querySelectorAll("li");
+              items.forEach(item => {
+                const text = item.textContent.trim();
+                if (text && !text.includes("См. также") && !text.includes("Примечания")) {
+                  holidays.push(text);
+                }
+              });
+              break;
+            }
+            nextElement = nextElement.nextElementSibling;
+          }
+          
+          // Отображаем праздники
+          const holidaysContainer = document.getElementById("holidays");
+          holidaysContainer.innerHTML = '';
+          
+          if (holidays.length > 0) {
+            holidays.forEach(holiday => {
+              const holidayElement = document.createElement('div');
+              holidayElement.className = 'holiday';
+              holidayElement.textContent = holiday;
+              holidaysContainer.appendChild(holidayElement);
+            });
+          } else {
+            holidaysContainer.textContent = "Сегодня нет известных праздников или не удалось их загрузить.";
+            holidaysContainer.className = "";
+          }
+        })
+        .catch(error => {
+          console.error("Ошибка:", error);
+          document.getElementById("holidays").textContent = "Не удалось загрузить праздники. Попробуйте позже.";
+          document.getElementById("holidays").className = "error";
         });
-      } else {
-        holidaysContainer.textContent = "Сегодня нет праздников или не удалось их загрузить.";
-      }
     }
     loadHolidays();
 
