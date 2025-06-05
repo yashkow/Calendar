@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Мотивация и курсы валют</title>
   <style>
+    /* Стили остаются такими же, как в предыдущем примере */
     body {
       margin: 0;
       font-family: sans-serif;
@@ -129,72 +130,33 @@
     }
     loadQuote();
 
-    // Праздники через Wikipedia API
+    // Праздники через Wikipedia API (новый упрощенный метод)
     function loadHolidays() {
       const today = updateDate();
-      const month = today.getMonth() + 1;
-      const day = today.getDate();
+      const month = today.getMonth() + 1; // 1-12
+      const day = today.getDate(); // 1-31
       
       document.getElementById("holidays").className = "loading";
       document.getElementById("holidays").textContent = "Загрузка праздников...";
       
-      // Формируем дату в формате "день_месяца" (например, "1_января")
-      const monthNames = [
-        "января", "февраля", "марта", "апреля", "мая", "июня",
-        "июля", "августа", "сентября", "октября", "ноября", "декабря"
-      ];
-      const dateStr = `${day}_${monthNames[month-1]}`;
-      
-      // Запрос к Wikipedia API
-      fetch(`https://ru.wikipedia.org/api/rest_v1/page/html/${dateStr}`)
-        .then(response => {
-          if (!response.ok) throw new Error("Ошибка загрузки");
-          return response.text();
+      fetch(`https://ru.wikipedia.org/api/rest_v1/feed/onthisday/holidays/${month}/${day}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Ошибка загрузки");
+          return res.json();
         })
-        .then(html => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, "text/html");
-          
-          // Ищем раздел с праздниками
-          const holidaysSection = Array.from(doc.querySelectorAll("h2")).find(h2 => 
-            h2.textContent.includes("Праздники") || h2.textContent.includes("Международные праздники")
-          );
-          
-          if (!holidaysSection) {
-            throw new Error("Раздел с праздниками не найден");
-          }
-          
-          // Получаем список праздников
-          let nextElement = holidaysSection.nextElementSibling;
-          const holidays = [];
-          
-          while (nextElement && !nextElement.matches("h2")) {
-            if (nextElement.matches("ul")) {
-              const items = nextElement.querySelectorAll("li");
-              items.forEach(item => {
-                const text = item.textContent.trim();
-                if (text && !text.includes("См. также") && !text.includes("Примечания")) {
-                  holidays.push(text);
-                }
-              });
-              break;
-            }
-            nextElement = nextElement.nextElementSibling;
-          }
-          
-          // Отображаем праздники
+        .then(data => {
           const holidaysContainer = document.getElementById("holidays");
           holidaysContainer.innerHTML = '';
           
-          if (holidays.length > 0) {
-            holidays.forEach(holiday => {
+          if (data.holidays && data.holidays.length > 0) {
+            data.holidays.forEach(holiday => {
               const holidayElement = document.createElement('div');
               holidayElement.className = 'holiday';
-              holidayElement.textContent = holiday;
+              holidayElement.textContent = holiday.text;
               holidaysContainer.appendChild(holidayElement);
             });
           } else {
-            holidaysContainer.textContent = "Сегодня нет известных праздников или не удалось их загрузить.";
+            holidaysContainer.textContent = "Сегодня нет известных праздников.";
             holidaysContainer.className = "";
           }
         })
