@@ -104,21 +104,31 @@
       });
 
     // 3. Праздники в Молдове (Nager.Date)
-    fetch("https://date.nager.at/api/v3/PublicHolidays/2025/MD")
-      .then(res => res.json())
-      .then(data => {
-        const currentDate = today.toISOString().split('T')[0];
-        const holidaysToday = data.filter(holiday => holiday.date === currentDate);
-        const container = document.getElementById("holidays");
-        if (holidaysToday.length > 0) {
-          container.innerHTML = holidaysToday.map(h => `<div class="holiday">${h.localName}</div>`).join('');
-        } else {
-          container.textContent = "Сегодня официальных праздников нет.";
-        }
-      })
-      .catch(() => {
-        document.getElementById("holidays").textContent = "Ошибка загрузки праздников.";
-      });
+ const countries = ["US", "DE", "JP", "FR", "BR", "IN"];
+const countryNames = {
+  US: "США", DE: "Германия", JP: "Япония", FR: "Франция", BR: "Бразилия", IN: "Индия"
+};
+
+const holidayContainer = document.getElementById("holidays");
+let holidaysFound = [];
+
+Promise.all(countries.map(code =>
+  fetch(`https://date.nager.at/api/v3/IsTodayPublicHoliday/${code}`)
+    .then(res => res.json())
+    .then(isHoliday => {
+      if (isHoliday) holidaysFound.push(countryNames[code]);
+    })
+)).then(() => {
+  if (holidaysFound.length > 0) {
+    holidayContainer.innerHTML = "Сегодня праздник в: <strong>" +
+      holidaysFound.join(", ") + "</strong>";
+  } else {
+    holidayContainer.textContent = "Сегодня нет международных праздников в проверенных странах.";
+  }
+}).catch(() => {
+  holidayContainer.textContent = "Ошибка загрузки праздников.";
+});
+
 
     // 4. Курс валют (USD → MDL)
     fetch("https://api.exchangerate.host/latest?base=USD&symbols=MDL")
