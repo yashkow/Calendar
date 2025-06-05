@@ -114,20 +114,25 @@
     updateDate();
 
     // Мотивационная цитата
-    function loadQuote() {
-      document.getElementById("quote").textContent = "Загрузка...";
-      fetch("https://api.quotable.io/random?maxLength=120")
-        .then(res => {
-          if (!res.ok) throw new Error("Ошибка сети");
-          return res.json();
-        })
-        .then(data => {
-          document.getElementById("quote").textContent = `${data.content} — ${data.author}`;
-        })
-        .catch(() => {
-          document.getElementById("quote").textContent = "Не удалось загрузить цитату. Попробуйте ещё раз.";
-        });
-    }
+function loadQuote() {
+  const quoteElem = document.getElementById("quote");
+  quoteElem.textContent = "Загрузка...";
+  fetch("https://api.quotable.io/random?maxLength=120")
+    .then(res => {
+      if (!res.ok) throw new Error("Ошибка сети");
+      return res.json();
+    })
+    .then(data => {
+      if (data && data.content && data.author) {
+        quoteElem.textContent = `${data.content} — ${data.author}`;
+      } else {
+        quoteElem.textContent = "Цитата недоступна.";
+      }
+    })
+    .catch(() => {
+      quoteElem.textContent = "Не удалось загрузить цитату. Попробуйте ещё раз.";
+    });
+}
     loadQuote();
 
     // Праздники через Wikipedia API (новый упрощенный метод)
