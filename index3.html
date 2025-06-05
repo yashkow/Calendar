@@ -137,15 +137,15 @@
     });
 
     // 4. Курс валют (USD → MDL)
-    fetch("https://api.exchangerate.host/latest?base=USD&symbols=MDL")
-      .then(res => res.json())
-      .then(data => {
-        const rate = data.rates.MDL.toFixed(2);
-        document.getElementById("rate").textContent = `1 доллар США = ${rate} молдавских леев`;
-      })
-      .catch(() => {
-        document.getElementById("rate").textContent = "Не удалось загрузить курс.";
-      });
+   fetch(proxy + "https://api.exchangerate.host/latest?base=USD&symbols=MDL")
+  .then(res => res.json())
+  .then(data => {
+    const rate = data.rates.MDL.toFixed(2);
+    document.getElementById("rate").textContent = `1 доллар США = ${rate} молдавских леев`;
+  })
+  .catch(() => {
+    document.getElementById("rate").textContent = "Не удалось загрузить курс.";
+  });
   </script>
 </body>
 </html>
