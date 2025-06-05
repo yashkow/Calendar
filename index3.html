@@ -104,19 +104,19 @@ fetch("https://open.er-api.com/v6/latest/USD")
       const rateMDL = rates.MDL;
 
       function toMDL(rate) {
-        return (rate / rateMDL).toFixed(2);
+        return (rateMDL / rate).toFixed(4);
       }
 
-      const mdl = 1; // MDL к MDL — 1
-      const uah = toMDL(rates.UAH);
-      const eur = toMDL(rates.EUR);
-      const rub = toMDL(rates.RUB);
+      const usdToMDL = rateMDL.toFixed(4); // 1 USD в MDL
+      const eurToMDL = toMDL(rates.EUR);
+      const uahToMDL = toMDL(rates.UAH);
+      const rubToMDL = toMDL(rates.RUB);
 
       document.getElementById("rate").innerHTML = `
-        1 молдавский лей = ${mdl} молдавских леев<br />
-        1 молдавский лей = ${uah} украинских гривен<br />
-        1 молдавский лей = ${eur} евро<br />
-        1 молдавский лей = ${rub} российских рублей
+        1 доллар США = ${usdToMDL} молдавских леев<br />
+        1 евро = ${eurToMDL} молдавских леев<br />
+        1 украинская гривна = ${uahToMDL} молдавских леев<br />
+        1 российский рубль = ${rubToMDL} молдавских леев
       `;
     } else {
       document.getElementById("rate").textContent = "Курс недоступен.";
@@ -125,6 +125,7 @@ fetch("https://open.er-api.com/v6/latest/USD")
   .catch(() => {
     document.getElementById("rate").textContent = "Не удалось загрузить курс.";
   });
+
   </script>
 </body>
 </html>
