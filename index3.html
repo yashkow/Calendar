@@ -86,14 +86,16 @@
   </div>
 
   <script>
+    const proxy = "https://cors-anywhere.herokuapp.com/";
+
     // 1. Текущая дата
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById("date").textContent =
       today.toLocaleDateString('ru-RU', options);
 
-    // 2. Мотивационная цитата (ZenQuotes)
-    fetch("https://zenquotes.io/api/today")
+    // 2. Мотивационная цитата (ZenQuotes) с прокси
+    fetch(proxy + "https://zenquotes.io/api/today")
       .then(res => res.json())
       .then(data => {
         const quote = data[0].q + " — " + data[0].a;
@@ -103,7 +105,7 @@
         document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
       });
 
-    // 3. Праздники в мире (Nager.Date)
+    // 3. Праздники в мире (Nager.Date) с прокси
     const countries = ["US", "DE", "JP", "FR", "BR", "IN"];
     const countryNames = {
       US: "США", DE: "Германия", JP: "Япония", FR: "Франция", BR: "Бразилия", IN: "Индия"
@@ -113,11 +115,12 @@
     let holidaysFound = [];
 
     Promise.all(countries.map(code =>
-      fetch(`https://date.nager.at/api/v3/IsTodayPublicHoliday/${code}`)
+      fetch(proxy + `https://date.nager.at/api/v3/IsTodayPublicHoliday/${code}`)
         .then(res => res.json())
         .then(isHoliday => {
           if (isHoliday) holidaysFound.push(countryNames[code]);
         })
+        .catch(() => {})
     )).then(() => {
       if (holidaysFound.length > 0) {
         holidayContainer.innerHTML = "Сегодня праздник в: <strong>" +
@@ -142,4 +145,5 @@
   </script>
 </body>
 </html>
+
 
