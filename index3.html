@@ -68,7 +68,7 @@
     </div>
 
     <div class="section">
-      <h2>Праздники в Молдове (Nager.Date)</h2>
+      <h2>Праздники в мире (Nager.Date)</h2>
       <div id="holidays">Загрузка...</div>
     </div>
   </div>
@@ -89,7 +89,7 @@
     // 1. Текущая дата
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById("date").textContent = 
+    document.getElementById("date").textContent =
       today.toLocaleDateString('ru-RU', options);
 
     // 2. Мотивационная цитата (ZenQuotes)
@@ -103,32 +103,31 @@
         document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
       });
 
-    // 3. Праздники в Молдове (Nager.Date)
- const countries = ["US", "DE", "JP", "FR", "BR", "IN"];
-const countryNames = {
-  US: "США", DE: "Германия", JP: "Япония", FR: "Франция", BR: "Бразилия", IN: "Индия"
-};
+    // 3. Праздники в мире (Nager.Date)
+    const countries = ["US", "DE", "JP", "FR", "BR", "IN"];
+    const countryNames = {
+      US: "США", DE: "Германия", JP: "Япония", FR: "Франция", BR: "Бразилия", IN: "Индия"
+    };
 
-const holidayContainer = document.getElementById("holidays");
-let holidaysFound = [];
+    const holidayContainer = document.getElementById("holidays");
+    let holidaysFound = [];
 
-Promise.all(countries.map(code =>
-  fetch(`https://date.nager.at/api/v3/IsTodayPublicHoliday/${code}`)
-    .then(res => res.json())
-    .then(isHoliday => {
-      if (isHoliday) holidaysFound.push(countryNames[code]);
-    })
-)).then(() => {
-  if (holidaysFound.length > 0) {
-    holidayContainer.innerHTML = "Сегодня праздник в: <strong>" +
-      holidaysFound.join(", ") + "</strong>";
-  } else {
-    holidayContainer.textContent = "Сегодня нет международных праздников в проверенных странах.";
-  }
-}).catch(() => {
-  holidayContainer.textContent = "Ошибка загрузки праздников.";
-});
-
+    Promise.all(countries.map(code =>
+      fetch(`https://date.nager.at/api/v3/IsTodayPublicHoliday/${code}`)
+        .then(res => res.json())
+        .then(isHoliday => {
+          if (isHoliday) holidaysFound.push(countryNames[code]);
+        })
+    )).then(() => {
+      if (holidaysFound.length > 0) {
+        holidayContainer.innerHTML = "Сегодня праздник в: <strong>" +
+          holidaysFound.join(", ") + "</strong>";
+      } else {
+        holidayContainer.textContent = "Сегодня нет международных праздников в проверенных странах.";
+      }
+    }).catch(() => {
+      holidayContainer.textContent = "Ошибка загрузки праздников.";
+    });
 
     // 4. Курс валют (USD → MDL)
     fetch("https://api.exchangerate.host/latest?base=USD&symbols=MDL")
@@ -143,3 +142,4 @@ Promise.all(countries.map(code =>
   </script>
 </body>
 </html>
+
