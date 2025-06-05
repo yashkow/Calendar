@@ -95,15 +95,19 @@
       today.toLocaleDateString('ru-RU', options);
 
     // 2. Мотивационная цитата (ZenQuotes) с прокси
-    fetch(proxy + "https://zenquotes.io/api/today")
-      .then(res => res.json())
-      .then(data => {
-        const quote = data[0].q + " — " + data[0].a;
-        document.getElementById("quote").textContent = quote;
-      })
-      .catch(() => {
-        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
-      });
+ fetch("https://type.fit/api/quotes")
+  .then(res => res.json())
+  .then(data => {
+    // Выбираем случайную цитату из массива
+    const randomIndex = Math.floor(Math.random() * data.length);
+    const quoteObj = data[randomIndex];
+    const text = quoteObj.text;
+    const author = quoteObj.author ? quoteObj.author : "Неизвестный автор";
+    document.getElementById("quote").textContent = `${text} — ${author}`;
+  })
+  .catch(() => {
+    document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
+  });
 
     // 3. Праздники в мире (Nager.Date) с прокси
     const countries = ["US", "DE", "JP", "FR", "BR", "IN"];
