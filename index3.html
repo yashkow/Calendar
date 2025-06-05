@@ -1,60 +1,136 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<title>Проверка Википедии и курсов валют</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  #holidays div { margin-bottom: 10px; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Мотивация и курсы валют</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .left, .right {
+      flex: 1;
+      padding: 30px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .left {
+      background-color: #f0f4f8;
+      border-right: 2px solid #ddd;
+    }
+    .right {
+      background-color: #fff;
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .quote {
+      font-size: 1.2em;
+      color: #0077b6;
+      font-style: italic;
+    }
+    #rate {
+      font-size: 1.1em;
+      color: #444;
+    }
+  </style>
 </head>
 <body>
+  <div class="left">
+    <div class="section">
+      <h2>Сегодня</h2>
+      <div id="date">Загрузка...</div>
+    </div>
+    <div class="section">
+      <h2>Мотивационная цитата</h2>
+      <div class="quote" id="quote">Загрузка...</div>
+    </div>
+    <div class="section">
+      <h2>Праздники в мире</h2>
+      <div id="holidays">Пока информация недоступна.</div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="section">
+      <h2>Случайное изображение (Picsum)</h2>
+      <img src="https://picsum.photos/600/400" alt="Случайное изображение" />
+    </div>
+    <div class="section">
+      <h2>Курс валют (к молдавскому лею)</h2>
+      <div id="rate">Загрузка...</div>
+    </div>
+  </div>
 
-<h1>Праздник из Википедии</h1>
-<div id="holiday">Загрузка...</div>
+  <script>
+    // Текущая дата
+    const today = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById("date").textContent =
+      today.toLocaleDateString('ru-RU', options);
 
-<h1>Курсы валют к MDL</h1>
-<div id="exchangeRates">Загрузка...</div>
-
-<script>
-  // Функция загрузки описания с Википедии
-  function fetchHoliday(title) {
-    const url = `https://ru.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&titles=${encodeURIComponent(title)}&format=json&origin=*`;
-    return fetch(url)
-      .then(response => response.json())
+    // Мотивационная цитата (type.fit)
+    fetch("https://type.fit/api/quotes")
+      .then(res => {
+        if (!res.ok) throw new Error("Ошибка сети");
+        return res.json();
+      })
       .then(data => {
-        const pages = data.query.pages;
-        const pageId = Object.keys(pages)[0];
-        return pages[pageId].extract || "Описание отсутствует";
+        const randomIndex = Math.floor(Math.random() * data.length);
+        const quoteObj = data[randomIndex];
+        const text = quoteObj.text;
+        const author = quoteObj.author ? quoteObj.author : "Неизвестный автор";
+        document.getElementById("quote").textContent = `${text} — ${author}`;
+      })
+      .catch(() => {
+        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
       });
-  }
 
-  // Показываем праздник
-  fetchHoliday("International_Day_of_Peace")
-    .then(html => {
-      document.getElementById('holiday').innerHTML = html;
-    })
-    .catch(() => {
-      document.getElementById('holiday').textContent = 'Ошибка загрузки праздника';
-    });
+    // Курс валют (exchangerate-api.com, база USD)
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then(res => {
+        if (!res.ok) throw new Error("Ошибка сети");
+        return res.json();
+      })
+      .then(data => {
+        if(data && data.rates) {
+          const rates = data.rates;
+          const rateMDL = rates.MDL;
 
-  // Загружаем курсы валют
-  fetch('https://api.exchangerate.host/latest?base=MDL&symbols=USD,EUR,UAH,RUB')
-    .then(res => res.json())
-    .then(data => {
-      const rates = data.rates;
-      let text = "";
-      text += rates.USD ? `1 USD = ${(1 / rates.USD).toFixed(4)} MDL<br>` : "";
-      text += rates.EUR ? `1 EUR = ${(1 / rates.EUR).toFixed(4)} MDL<br>` : "";
-      text += rates.UAH ? `1 UAH = ${(1 / rates.UAH).toFixed(4)} MDL<br>` : "";
-      text += rates.RUB ? `1 RUB = ${(1 / rates.RUB).toFixed(4)} MDL<br>` : "";
-      document.getElementById('exchangeRates').innerHTML = text || "Данные отсутствуют";
-    })
-    .catch(() => {
-      document.getElementById('exchangeRates').textContent = 'Ошибка загрузки курсов валют';
-    });
-</script>
+          function toMDL(rate) {
+            return (rateMDL / rate).toFixed(4);
+          }
 
+          const usdToMDL = rateMDL.toFixed(4); // 1 USD в MDL
+          const eurToMDL = toMDL(rates.EUR);
+          const uahToMDL = toMDL(rates.UAH);
+          const rubToMDL = toMDL(rates.RUB);
+
+          document.getElementById("rate").innerHTML = `
+            1 доллар США = ${usdToMDL} молдавских леев<br />
+            1 евро = ${eurToMDL} молдавских леев<br />
+            1 украинская гривна = ${uahToMDL} молдавских леев<br />
+            1 российский рубль = ${rubToMDL} молдавских леев
+          `;
+        } else {
+          document.getElementById("rate").textContent = "Курс недоступен.";
+        }
+      })
+      .catch(() => {
+        document.getElementById("rate").textContent = "Не удалось загрузить курс.";
+      });
+  </script>
 </body>
 </html>
 
