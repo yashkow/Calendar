@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Мотивация и курсы валют</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .left, .right {
+      flex: 1;
+      padding: 30px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .left {
+      background-color: #f0f4f8;
+      border-right: 2px solid #ddd;
+    }
+    .right {
+      background-color: #fff;
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .quote {
+      font-size: 1.2em;
+      color: #0077b6;
+      font-style: italic;
+    }
+    #rate {
+      font-size: 1.1em;
+      color: #444;
+    }
+    .holiday {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #e3f2fd;
+      border-radius: 8px;
+    }
+    .refresh-btn {
+      background-color: #0077b6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .refresh-btn:hover {
+      background-color: #005b92;
+    }
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="left">
+    <div class="section">
+      <h2>Сегодня</h2>
+      <div id="date">Загрузка...</div>
+    </div>
+    <div class="section">
+      <h2>Мотивационная цитата</h2>
+      <div class="quote" id="quote">Загрузка...</div>
+      <button class="refresh-btn" onclick="loadQuote()">Новая цитата</button>
+    </div>
+    <div class="section">
+      <h2>Праздники сегодня</h2>
+      <div id="holidays" class="loading">Загрузка праздников...</div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="section">
+      <h2>Случайное изображение (Picsum)</h2>
+      <img src="https://picsum.photos/600/400?random=1" alt="Случайное изображение" id="randomImage" />
+      <button class="refresh-btn" onclick="refreshImage()">Новое изображение</button>
+    </div>
+    <div class="section">
+      <h2>Курс валют (к молдавскому лею)</h2>
+      <div id="rate">Загрузка...</div>
+      <button class="refresh-btn" onclick="loadRates()">Обновить курс</button>
+    </div>
+  </div>
+
+  <script>
+    // Текущая дата
+    function updateDate() {
+      const today = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById("date").textContent = today.toLocaleDateString('ru-RU', options);
+    }
+    updateDate();
+
+    // Мотивационная цитата (новый API)
+    function loadQuote() {
+      document.getElementById("quote").textContent = "Загрузка...";
+      fetch("https://api.quotable.io/random?maxLength=120")
+        .then(res => {
+          if (!res.ok) throw new Error("Ошибка сети");
+          return res.json();
+        })
+        .then(data => {
+          document.getElementById("quote").textContent = `${data.content} — ${data.author}`;
+        })
+        .catch(() => {
+          document.getElementById("quote").textContent = "Не удалось загрузить цитату. Попробуйте ещё раз.";
+        });
+    }
+    loadQuote();
+
+    // Праздники (используем API Calendarific)
+    function loadHolidays() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const day = today.getDate();
+      
+      // Внимание: Для реального использования нужно получить API ключ на calendarific.com
+      // Это демо-версия с ограниченными данными
+      const demoHolidays = [
+        { name: "Международный день программиста", country: "Россия" },
+        { name: "День знаний", country: "Россия" },
+        { name: "День работников нефтяной и газовой промышленности", country: "Россия" }
+      ];
+      
+      // В реальном приложении нужно сделать запрос к API:
+      // fetch(`https://calendarific.com/api/v2/holidays?api_key=ВАШ_КЛЮЧ&country=RU&year=${year}&month=${month}&day=${day}`)
+      
+      const holidaysContainer = document.getElementById("holidays");
+      if (demoHolidays.length > 0) {
+        holidaysContainer.innerHTML = '';
+        demoHolidays.forEach(holiday => {
+          const holidayElement = document.createElement('div');
+          holidayElement.className = 'holiday';
+          holidayElement.innerHTML = `<strong>${holiday.name}</strong><br>${holiday.country}`;
+          holidaysContainer.appendChild(holidayElement);
+        });
+      } else {
+        holidaysContainer.textContent = "Сегодня нет праздников или не удалось их загрузить.";
+      }
+    }
+    loadHolidays();
+
+    // Обновление изображения
+    function refreshImage() {
+      const random = Math.floor(Math.random() * 1000);
+      document.getElementById("randomImage").src = `https://picsum.photos/600/400?random=${random}`;
+    }
+
+    // Курс валют
+    function loadRates() {
+      document.getElementById("rate").textContent = "Загрузка...";
+      fetch("https://open.er-api.com/v6/latest/USD")
+        .then(res => {
+          if (!res.ok) throw new Error("Ошибка сети");
+          return res.json();
+        })
+        .then(data => {
+          if(data && data.rates) {
+            const rates = data.rates;
+            const rateMDL = rates.MDL;
+
+            function toMDL(rate) {
+              return (rateMDL / rate).toFixed(4);
+            }
+
+            const usdToMDL = rateMDL.toFixed(4);
+            const eurToMDL = toMDL(rates.EUR);
+            const uahToMDL = toMDL(rates.UAH);
+            const rubToMDL = toMDL(rates.RUB);
+
+            document.getElementById("rate").innerHTML = `
+              1 доллар США = ${usdToMDL} молдавских леев<br />
+              1 евро = ${eurToMDL} молдавских леев<br />
+              1 украинская гривна = ${uahToMDL} молдавских леев<br />
+              1 российский рубль = ${rubToMDL} молдавских леев
+            `;
+          } else {
+            document.getElementById("rate").textContent = "Курс недоступен.";
+          }
+        })
+        .catch(() => {
+          document.getElementById("rate").textContent = "Не удалось загрузить курс. Попробуйте ещё раз.";
+        });
+    }
+    loadRates();
+  </script>
+</body>
+</html>
