@@ -101,16 +101,22 @@ fetch("https://open.er-api.com/v6/latest/USD")
   .then(data => {
     if(data && data.rates) {
       const rates = data.rates;
-      const mdl = rates.MDL ? rates.MDL.toFixed(2) : 'N/A';
-      const uah = rates.UAH ? rates.UAH.toFixed(2) : 'N/A';
-      const eur = rates.EUR ? rates.EUR.toFixed(2) : 'N/A';
-      const rub = rates.RUB ? rates.RUB.toFixed(2) : 'N/A';
+      const rateMDL = rates.MDL;
+
+      function toMDL(rate) {
+        return (rate / rateMDL).toFixed(2);
+      }
+
+      const mdl = 1; // MDL к MDL — 1
+      const uah = toMDL(rates.UAH);
+      const eur = toMDL(rates.EUR);
+      const rub = toMDL(rates.RUB);
 
       document.getElementById("rate").innerHTML = `
-        1 доллар США = ${mdl} молдавских леев<br />
-        1 доллар США = ${uah} украинских гривен<br />
-        1 доллар США = ${eur} евро<br />
-        1 доллар США = ${rub} российских рублей
+        1 молдавский лей = ${mdl} молдавских леев<br />
+        1 молдавский лей = ${uah} украинских гривен<br />
+        1 молдавский лей = ${eur} евро<br />
+        1 молдавский лей = ${rub} российских рублей
       `;
     } else {
       document.getElementById("rate").textContent = "Курс недоступен.";
