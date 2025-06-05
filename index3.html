@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Мотивация и информация на сегодня</title>
+  <title>Мотивация и курсы валют</title>
   <style>
     body {
       margin: 0;
@@ -41,7 +41,7 @@
       color: #0077b6;
       font-style: italic;
     }
-    .rate {
+    #rate {
       font-size: 1.1em;
       color: #444;
     }
@@ -68,7 +68,7 @@
       <img src="https://picsum.photos/600/400" alt="Случайное изображение" />
     </div>
     <div class="section">
-      <h2>Курс валют (USD → MDL)</h2>
+      <h2>Курс валют (к молдавскому лею)</h2>
       <div id="rate">Загрузка...</div>
     </div>
   </div>
@@ -82,7 +82,10 @@
 
     // Мотивационная цитата (type.fit)
     fetch("https://type.fit/api/quotes")
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Ошибка сети");
+        return res.json();
+      })
       .then(data => {
         const randomIndex = Math.floor(Math.random() * data.length);
         const quoteObj = data[randomIndex];
@@ -94,38 +97,39 @@
         document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
       });
 
-    // Курс валют — используем exchangerate-api.com бесплатный endpoint (CORS разрешён)
-    // Пример URL: https://open.er-api.com/v6/latest/USD
-fetch("https://open.er-api.com/v6/latest/USD")
-  .then(res => res.json())
-  .then(data => {
-    if(data && data.rates) {
-      const rates = data.rates;
-      const rateMDL = rates.MDL;
+    // Курс валют (exchangerate-api.com, база USD)
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then(res => {
+        if (!res.ok) throw new Error("Ошибка сети");
+        return res.json();
+      })
+      .then(data => {
+        if(data && data.rates) {
+          const rates = data.rates;
+          const rateMDL = rates.MDL;
 
-      function toMDL(rate) {
-        return (rateMDL / rate).toFixed(4);
-      }
+          function toMDL(rate) {
+            return (rateMDL / rate).toFixed(4);
+          }
 
-      const usdToMDL = rateMDL.toFixed(4); // 1 USD в MDL
-      const eurToMDL = toMDL(rates.EUR);
-      const uahToMDL = toMDL(rates.UAH);
-      const rubToMDL = toMDL(rates.RUB);
+          const usdToMDL = rateMDL.toFixed(4); // 1 USD в MDL
+          const eurToMDL = toMDL(rates.EUR);
+          const uahToMDL = toMDL(rates.UAH);
+          const rubToMDL = toMDL(rates.RUB);
 
-      document.getElementById("rate").innerHTML = `
-        1 доллар США = ${usdToMDL} молдавских леев<br />
-        1 евро = ${eurToMDL} молдавских леев<br />
-        1 украинская гривна = ${uahToMDL} молдавских леев<br />
-        1 российский рубль = ${rubToMDL} молдавских леев
-      `;
-    } else {
-      document.getElementById("rate").textContent = "Курс недоступен.";
-    }
-  })
-  .catch(() => {
-    document.getElementById("rate").textContent = "Не удалось загрузить курс.";
-  });
-
+          document.getElementById("rate").innerHTML = `
+            1 доллар США = ${usdToMDL} молдавских леев<br />
+            1 евро = ${eurToMDL} молдавских леев<br />
+            1 украинская гривна = ${uahToMDL} молдавских леев<br />
+            1 российский рубль = ${rubToMDL} молдавских леев
+          `;
+        } else {
+          document.getElementById("rate").textContent = "Курс недоступен.";
+        }
+      })
+      .catch(() => {
+        document.getElementById("rate").textContent = "Не удалось загрузить курс.";
+      });
   </script>
 </body>
 </html>
