@@ -81,21 +81,19 @@
       today.toLocaleDateString('ru-RU', options);
 
     // Мотивационная цитата (type.fit)
-    fetch("https://type.fit/api/quotes")
-      .then(res => {
-        if (!res.ok) throw new Error("Ошибка сети");
-        return res.json();
-      })
-      .then(data => {
-        const randomIndex = Math.floor(Math.random() * data.length);
-        const quoteObj = data[randomIndex];
-        const text = quoteObj.text;
-        const author = quoteObj.author ? quoteObj.author : "Неизвестный автор";
-        document.getElementById("quote").textContent = `${text} — ${author}`;
-      })
-      .catch(() => {
-        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
-      });
+fetch('https://zenquotes.io/api/random')
+  .then(res => res.json())
+  .then(data => {
+    if (data && data.length > 0) {
+      const q = data[0];
+      document.getElementById("quote").textContent = `"${q.q}" — ${q.a}`;
+    } else {
+      document.getElementById("quote").textContent = "Цитаты не найдены.";
+    }
+  })
+  .catch(() => {
+    document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
+  });
 
     // Курс валют (exchangerate-api.com, база USD)
     fetch("https://open.er-api.com/v6/latest/USD")
