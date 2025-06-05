@@ -11,45 +11,37 @@
       height: 100vh;
       overflow: hidden;
     }
-
     .left, .right {
       flex: 1;
       padding: 30px;
       box-sizing: border-box;
       overflow-y: auto;
     }
-
     .left {
       background-color: #f0f4f8;
       border-right: 2px solid #ddd;
     }
-
     .right {
       background-color: #fff;
     }
-
     h2 {
       margin-top: 0;
       color: #333;
     }
-
     .section {
       margin-bottom: 30px;
     }
-
     img {
       max-width: 100%;
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
     .quote {
       font-size: 1.2em;
       color: #0077b6;
       font-style: italic;
     }
-
-    .holiday, .rate {
+    .rate {
       font-size: 1.1em;
       color: #444;
     }
@@ -61,91 +53,62 @@
       <h2>Сегодня</h2>
       <div id="date">Загрузка...</div>
     </div>
-
     <div class="section">
-      <h2>Мотивационная цитата (ZenQuotes)</h2>
+      <h2>Мотивационная цитата</h2>
       <div class="quote" id="quote">Загрузка...</div>
     </div>
-
     <div class="section">
-      <h2>Праздники в мире (Nager.Date)</h2>
-      <div id="holidays">Загрузка...</div>
+      <h2>Праздники в мире</h2>
+      <div id="holidays">Пока информация недоступна.</div>
     </div>
   </div>
-
   <div class="right">
     <div class="section">
       <h2>Случайное изображение (Picsum)</h2>
-      <img id="image" src="https://picsum.photos/600/400" alt="Случайное изображение" />
+      <img src="https://picsum.photos/600/400" alt="Случайное изображение" />
     </div>
-
     <div class="section">
-      <h2>Курс валют (exchangerate.host)</h2>
+      <h2>Курс валют (USD → MDL)</h2>
       <div id="rate">Загрузка...</div>
     </div>
   </div>
 
   <script>
-    const proxy = "https://cors-anywhere.herokuapp.com/";
-
-    // 1. Текущая дата
+    // Текущая дата
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById("date").textContent =
       today.toLocaleDateString('ru-RU', options);
 
-    // 2. Мотивационная цитата (ZenQuotes) с прокси
- fetch("https://type.fit/api/quotes")
-  .then(res => res.json())
-  .then(data => {
-    // Выбираем случайную цитату из массива
-    const randomIndex = Math.floor(Math.random() * data.length);
-    const quoteObj = data[randomIndex];
-    const text = quoteObj.text;
-    const author = quoteObj.author ? quoteObj.author : "Неизвестный автор";
-    document.getElementById("quote").textContent = `${text} — ${author}`;
-  })
-  .catch(() => {
-    document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
-  });
+    // Мотивационная цитата (type.fit)
+    fetch("https://type.fit/api/quotes")
+      .then(res => res.json())
+      .then(data => {
+        const randomIndex = Math.floor(Math.random() * data.length);
+        const quoteObj = data[randomIndex];
+        const text = quoteObj.text;
+        const author = quoteObj.author ? quoteObj.author : "Неизвестный автор";
+        document.getElementById("quote").textContent = `${text} — ${author}`;
+      })
+      .catch(() => {
+        document.getElementById("quote").textContent = "Не удалось загрузить цитату.";
+      });
 
-    // 3. Праздники в мире (Nager.Date) с прокси
-    const countries = ["US", "DE", "JP", "FR", "BR", "IN"];
-    const countryNames = {
-      US: "США", DE: "Германия", JP: "Япония", FR: "Франция", BR: "Бразилия", IN: "Индия"
-    };
-
-    const holidayContainer = document.getElementById("holidays");
-    let holidaysFound = [];
-
-    Promise.all(countries.map(code =>
-      fetch(proxy + `https://date.nager.at/api/v3/IsTodayPublicHoliday/${code}`)
-        .then(res => res.json())
-        .then(isHoliday => {
-          if (isHoliday) holidaysFound.push(countryNames[code]);
-        })
-        .catch(() => {})
-    )).then(() => {
-      if (holidaysFound.length > 0) {
-        holidayContainer.innerHTML = "Сегодня праздник в: <strong>" +
-          holidaysFound.join(", ") + "</strong>";
-      } else {
-        holidayContainer.textContent = "Сегодня нет международных праздников в проверенных странах.";
-      }
-    }).catch(() => {
-      holidayContainer.textContent = "Ошибка загрузки праздников.";
-    });
-
-    // 4. Курс валют (USD → MDL)
-   fetch(proxy + "https://api.exchangerate.host/latest?base=USD&symbols=MDL")
-  .then(res => res.json())
-  .then(data => {
-    const rate = data.rates.MDL.toFixed(2);
-    document.getElementById("rate").textContent = `1 доллар США = ${rate} молдавских леев`;
-  })
-  .catch(() => {
-    document.getElementById("rate").textContent = "Не удалось загрузить курс.";
-  });
+    // Курс валют — используем exchangerate-api.com бесплатный endpoint (CORS разрешён)
+    // Пример URL: https://open.er-api.com/v6/latest/USD
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then(res => res.json())
+      .then(data => {
+        if(data && data.rates && data.rates.MDL) {
+          const rate = data.rates.MDL.toFixed(2);
+          document.getElementById("rate").textContent = `1 доллар США = ${rate} молдавских леев`;
+        } else {
+          document.getElementById("rate").textContent = "Курс недоступен.";
+        }
+      })
+      .catch(() => {
+        document.getElementById("rate").textContent = "Не удалось загрузить курс.";
+      });
   </script>
 </body>
 </html>
